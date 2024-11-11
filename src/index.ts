@@ -1,4 +1,5 @@
 import { LLMSpecificModel, LMStudioClient } from "@lmstudio/sdk";
+import { confirm } from "@clack/prompts";
 import { exec } from "child_process";
 
 const client = new LMStudioClient();
@@ -15,9 +16,15 @@ async function main() {
     process.exit(1);
   }
   const args = process.argv.slice(2);
-  console.log('Args:', args);
-  const message = await constructCommitMessage(model, staged.diff);
-  console.log('Commit message:', message);
+  const prefix = args.filter(arg => arg.startsWith('--prefix')).map(arg => arg.split('=')[1])[0] ?? undefined;
+  const response = await constructCommitMessage(model, staged.diff);
+  const message = [prefix, response].filter(p => !!p).join(' ');
+  const confirmed = await confirm({ message: `Use this commit message?\n---\n${message}\n` });
+  if (confirmed) {
+    exec(`git commit -m "${message}"`);
+  } else {
+    console.log('Commit cancelled.');
+  }
 }
 main();
 
@@ -98,13 +105,17 @@ const getStagedDiff = async (excludeFiles?: string[]) => {
 
 const constructCommitMessage = async (model: LLMSpecificModel, diff: string) => {
   const prediction = model.respond([
-    { role: "system", content: generatePrompt('English', 200, '') },
+    { role: "system", content: generatePrompt('English', 200, 'conventional') },
     { role: "user", content: diff },
   ], {
     maxPredictedTokens: 100,
     temperature: 0.7,
   });
-  return prediction;
+  let message = '';
+  for await (const text of prediction) {
+    message += text;
+  }
+  return message;
 }
 
 const commitTypesArray = ['', 'conventional'] as const;

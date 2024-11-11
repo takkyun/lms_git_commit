@@ -11,6 +11,7 @@
   "author": "Takuya Otani",
   "license": "UNLICENSED",
   "dependencies": {
+    "@clack/prompts": "^0.7.0",
     "@lmstudio/sdk": "^0.2.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
