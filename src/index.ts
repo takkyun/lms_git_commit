@@ -14,7 +14,10 @@ async function main() {
     console.error('No staged changes found.');
     process.exit(1);
   }
-  constructCommitMessage(model, staged.diff);
+  const args = process.argv.slice(2);
+  console.log('Args:', args);
+  const message = await constructCommitMessage(model, staged.diff);
+  console.log('Commit message:', message);
 }
 main();
 
@@ -101,9 +104,7 @@ const constructCommitMessage = async (model: LLMSpecificModel, diff: string) => 
     maxPredictedTokens: 100,
     temperature: 0.7,
   });
-  for await (const text of prediction) {
-    process.stdout.write(text);
-  }
+  return prediction;
 }
 
 const commitTypesArray = ['', 'conventional'] as const;
