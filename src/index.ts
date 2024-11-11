@@ -43,6 +43,11 @@ async function checkModels() {
   return await client.llm.get({ identifier: defaultModelIdentifier });
 }
 
+/**
+ * The following code is from https://github.com/Nutlope/aicommits with some modifications.
+ * Copyright (c) Hassan El Mghari
+ */
+
 const assertGitRepo = async () => {
   const result = await new Promise<string>((resolve, reject) => {
     exec('git rev-parse --show-toplevel', (error, stdout, stderr) => {
@@ -61,7 +66,6 @@ const excludeFromDiff = (path: string) => `':!${path}'`;
 const filesToExclude = [
   'package-lock.json',
   'pnpm-lock.yaml',
-
   // yarn.lock, Cargo.lock, Gemfile.lock, Pipfile.lock, etc.
   '*.lock',
 ].map(excludeFromDiff);
