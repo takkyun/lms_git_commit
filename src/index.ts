@@ -8,6 +8,10 @@ const defaultModelIdentifier = 'mistral-nemo-japanese-instruct-2408';
 
 async function main() {
   const model = await checkModels();
+  if (!model) {
+    console.error('Model not found.');
+    process.exit(1);
+  }
   console.log('Model:', model.identifier);
   await assertGitRepo();
   const staged = await getStagedDiff();
