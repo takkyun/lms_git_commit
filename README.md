@@ -6,10 +6,10 @@ This project is a command-line tool that generates automated Git commit messages
 
 ## Features
 
-- **Automated Git Commit Message Generation**: Uses an LLM to generate concise, context-aware commit messages based on the staged changes.
-- **Support for Conventional Commits**: Option to generate commit messages following the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format.
-- **Git Integration**: Automatically fetches staged changes, prompts the user for confirmation, and commits the changes with the generated message.
-- **Custom Prefix Support**: Optionally add a prefix to the generated commit message.
+- **Automated Commit Message Generation**: Uses an LLM to generate concise, context-aware Git commit messages based on staged changes.
+- **Support for Conventional Commits**: Option to generate commit messages using the [Conventional Commits](https://www.conventionalcommits.org/) format.
+- **Customizable Options**: Supports additional configurations like message language, length, and clipboard copy.
+- **Git Integration**: Automatically detects staged changes, generates commit messages, and can either commit directly or copy the message to the clipboard.
 
 ## Prerequisites
 
@@ -30,31 +30,71 @@ This project is a command-line tool that generates automated Git commit messages
    npm install
    ```
 
+## Usage
+
+1. **Stage Your Changes**: Ensure you have changes staged in your Git repository.
+   ```bash
+   git add <files>
+   ```
+
+2. **Run the Script**:
+   ```bash
+   node generate-commit.js
+   ```
+
+3. **Available Command-Line Arguments**:
+   - `--prefix=<text>`: Add a custom prefix to the generated commit message.
+   - `--locale=<language>`: Set the language for the commit message (default is `English`).
+   - `--len=<number>`: Set the maximum character length for the commit message (default is `200`).
+   - `--type=<commit-type>`: Specify a commit type ('conventional').
+   - `--clipboard=true`: Copy the generated commit message to the clipboard instead of committing directly.
+
+### Example Commands
+
+1. **Basic Usage**:
+   ```bash
+   node generate-commit.js
+   ```
+
+2. **With a Prefix**:
+   ```bash
+   node generate-commit.js --prefix="[HOTFIX]"
+   ```
+
+3. **With Custom Language and Length**:
+   ```bash
+   node generate-commit.js --locale="Japanese" --len=150
+   ```
+
+4. **Using Conventional Commit Type**:
+   ```bash
+   node generate-commit.js --type="conventional"
+   ```
+
+5. **Copy to Clipboard**:
+   ```bash
+   node generate-commit.js --clipboard=true
+   ```
+
 ## Configuration
 
-### Models
+### Default Model
 
-The tool uses the `Mistral-Nemo-Japanese-Instruct-2408` model by default. You can modify the `defaultModel` and `defaultModelIdentifier` constants in the script if you want to use a different model.
+The tool uses the `Mistral-Nemo-Japanese-Instruct-2408` model by default. You can modify the `defaultModel` and `defaultModelIdentifier` constants in the script to switch to a different model if needed.
 
-### Excluding Files
+### Excluding Files from Diff
 
-By default, the tool excludes certain files from the diff analysis, such as:
+The tool excludes specific files (e.g., lock files) from the diff analysis by default:
 - `package-lock.json`
 - `pnpm-lock.yaml`
-- Any `.lock` files (e.g., `yarn.lock`, `Cargo.lock`, etc.)
+- Any `*.lock` files (e.g., `yarn.lock`, `Cargo.lock`)
 
-You can customize this list by modifying the `filesToExclude` array in the script.
-
-## Limitations
-
-- The tool requires access to LMStudio, which must be set up separately.
-- The generated commit message is limited to a maximum of 200 characters.
-- The script currently supports generating commit messages in English only.
+You can adjust this behavior in the `getStagedDiff` function.
 
 ## Acknowledgments
 
-- The Git repository detection and diff retrieval logic are adapted from [Nutlope/aicommits](https://github.com/Nutlope/aicommits) with modifications.
-- This project is inspired by the need for consistent and efficient Git commit practices.
+- The Git repository detection and diff retrieval logic are inspired by [Nutlope/aicommits](https://github.com/Nutlope/aicommits) with modifications.
+- This project was created to streamline Git commit practices, inspired by conventional commits.
 
 ## License
 
