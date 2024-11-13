@@ -2,7 +2,7 @@ import { LLMSpecificModel, LMStudioClient } from "@lmstudio/sdk";
 import { confirm } from "@clack/prompts";
 import { exec } from "child_process";
 import { assertGitRepo, getStagedDiff } from "./git";
-import { generatePrompt } from "./prompt";
+import { CommitType, generatePrompt, isCommitType } from "./prompt";
 
 const client = new LMStudioClient();
 const defaultModel = 'QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/Mistral-Nemo-Japanese-Instruct-2408.Q4_0.gguf';
@@ -19,9 +19,9 @@ const checkModels = async () => {
   return await client.llm.get({ identifier: defaultModelIdentifier });
 }
 
-const constructCommitMessage = async (model: LLMSpecificModel, diff: string) => {
+const constructCommitMessage = async (model: LLMSpecificModel, diff: string, locale: string, len: number, type: CommitType) => {
   const prediction = model.respond([
-    { role: "system", content: generatePrompt('English', 200, 'conventional') },
+    { role: "system", content: generatePrompt(locale, len, type) },
     { role: "user", content: diff },
   ], {
     maxPredictedTokens: 100,
@@ -32,6 +32,11 @@ const constructCommitMessage = async (model: LLMSpecificModel, diff: string) => 
     message += text;
   }
   return message;
+}
+
+const getArgParam = (key: string): string | undefined => {
+  const args = process.argv.slice(2);
+  return args.filter(arg => arg.startsWith(`--${key}`)).map(arg => arg.split('=')[1])[0] ?? undefined;
 }
 
 const main = async () => {
@@ -47,9 +52,11 @@ const main = async () => {
     console.error('No staged changes found.');
     process.exit(1);
   }
-  const args = process.argv.slice(2);
-  const prefix = args.filter(arg => arg.startsWith('--prefix')).map(arg => arg.split('=')[1])[0] ?? undefined;
-  const response = await constructCommitMessage(model, staged.diff);
+  const prefix = getArgParam('prefix');
+  const locale = getArgParam('locale') ?? 'English';
+  const len = parseInt(getArgParam('len') ?? '200');
+  const type = getArgParam('type') ?? '';
+  const response = await constructCommitMessage(model, staged.diff, locale, len, isCommitType(type) ? type : '');
   const message = [prefix, response].filter(p => !!p).join(' ');
   const confirmed = await confirm({ message: `Use this commit message?\n---\n${message}\n` });
   if (confirmed) {

@@ -4,7 +4,8 @@
  */
 
 const commitTypesArray = ['', 'conventional'] as const;
-type CommitType = (typeof commitTypesArray)[number];
+export type CommitType = (typeof commitTypesArray)[number];
+export const isCommitType = (type: string): type is CommitType => commitTypesArray.includes(type as CommitType);
 const commitTypeFormats: Record<CommitType, string> = {
   '': '<commit message>',
   conventional: '<type>(<optional scope>): <commit message>',
