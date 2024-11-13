@@ -34,7 +34,7 @@ const constructCommitMessage = async (model: LLMSpecificModel, diff: string) => 
   return message;
 }
 
-async function main() {
+const main = async () => {
   const model = await checkModels();
   if (!model) {
     console.error('Model not found.');
