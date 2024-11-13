@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "build": "tsc -p tsconfig.json"
+    "build": "node build.js",
+    "clean": "rm -rf dist"
   },
   "author": "Takuya Otani",
   "license": "MIT License",
@@ -16,5 +17,8 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
-  "gitHead": "96f419904258c472237e2a50496711c7552ed8af"
+  "gitHead": "96f419904258c472237e2a50496711c7552ed8af",
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
 }

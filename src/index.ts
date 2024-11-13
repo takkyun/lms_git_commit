@@ -3,6 +3,7 @@ import { confirm } from "@clack/prompts";
 import { exec } from "child_process";
 import { assertGitRepo, getStagedDiff } from "./git";
 import { CommitType, generatePrompt, isCommitType } from "./prompt";
+import { copyToClipboard } from "./copy";
 
 const client = new LMStudioClient();
 const defaultModel = 'QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/Mistral-Nemo-Japanese-Instruct-2408.Q4_0.gguf';
@@ -56,13 +57,18 @@ const main = async () => {
   const locale = getArgParam('locale') ?? 'English';
   const len = parseInt(getArgParam('len') ?? '200');
   const type = getArgParam('type') ?? '';
+  const clipboard = getArgParam('clipboard') === 'true';
   const response = await constructCommitMessage(model, staged.diff, locale, len, isCommitType(type) ? type : '');
   const message = [prefix, response].filter(p => !!p).join(' ');
   const confirmed = await confirm({ message: `Use this commit message?\n---\n${message}\n` });
   if (confirmed) {
-    exec(`git commit -m "${message}"`);
+    if (clipboard) {
+      copyToClipboard(message);
+    } else {
+      exec(`git commit -m "${message}"`)
+    }
   } else {
-    console.log('Commit cancelled.');
+    console.error('cancelled.');
   }
 }
 main();
