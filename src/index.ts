@@ -8,33 +8,7 @@ const client = new LMStudioClient();
 const defaultModel = 'QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/Mistral-Nemo-Japanese-Instruct-2408.Q4_0.gguf';
 const defaultModelIdentifier = 'mistral-nemo-japanese-instruct-2408';
 
-async function main() {
-  const model = await checkModels();
-  if (!model) {
-    console.error('Model not found.');
-    process.exit(1);
-  }
-  console.log('Model:', model.identifier);
-  await assertGitRepo();
-  const staged = await getStagedDiff();
-  if (!staged || !staged.diff) {
-    console.error('No staged changes found.');
-    process.exit(1);
-  }
-  const args = process.argv.slice(2);
-  const prefix = args.filter(arg => arg.startsWith('--prefix')).map(arg => arg.split('=')[1])[0] ?? undefined;
-  const response = await constructCommitMessage(model, staged.diff);
-  const message = [prefix, response].filter(p => !!p).join(' ');
-  const confirmed = await confirm({ message: `Use this commit message?\n---\n${message}\n` });
-  if (confirmed) {
-    exec(`git commit -m "${message}"`);
-  } else {
-    console.log('Commit cancelled.');
-  }
-}
-main();
-
-async function checkModels() {
+const checkModels = async () => {
   const loadedLLMs = await client.llm.listLoaded();
   if (loadedLLMs.length === 0) {
     await client.llm.load(defaultModel, {
@@ -60,3 +34,28 @@ const constructCommitMessage = async (model: LLMSpecificModel, diff: string) => 
   return message;
 }
 
+async function main() {
+  const model = await checkModels();
+  if (!model) {
+    console.error('Model not found.');
+    process.exit(1);
+  }
+  console.log('Model:', model.identifier);
+  await assertGitRepo();
+  const staged = await getStagedDiff();
+  if (!staged || !staged.diff) {
+    console.error('No staged changes found.');
+    process.exit(1);
+  }
+  const args = process.argv.slice(2);
+  const prefix = args.filter(arg => arg.startsWith('--prefix')).map(arg => arg.split('=')[1])[0] ?? undefined;
+  const response = await constructCommitMessage(model, staged.diff);
+  const message = [prefix, response].filter(p => !!p).join(' ');
+  const confirmed = await confirm({ message: `Use this commit message?\n---\n${message}\n` });
+  if (confirmed) {
+    exec(`git commit -m "${message}"`);
+  } else {
+    console.log('Commit cancelled.');
+  }
+}
+main();
