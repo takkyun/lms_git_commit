@@ -6,8 +6,8 @@ import { CommitType, generatePrompt, isCommitType } from "./prompt";
 import { copyToClipboard } from "./copy";
 
 const client = new LMStudioClient();
-const defaultModel = 'QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/Mistral-Nemo-Japanese-Instruct-2408.Q4_0.gguf';
-const defaultModelIdentifier = 'mistral-nemo-japanese-instruct-2408';
+const defaultModel = 'lightblue/suzume-llama-3-8B-japanese-gguf/ggml-model-Q4_K_M.gguf';
+const defaultModelIdentifier = 'suzume-llama-3-8b-japanese';
 
 const checkModels = async () => {
   const loadedLLMs = await client.llm.listLoaded();
@@ -21,8 +21,9 @@ const checkModels = async () => {
 }
 
 const constructCommitMessage = async (model: LLMSpecificModel, diff: string, locale: string, len: number, type: CommitType) => {
+  const prompt = generatePrompt(locale, len, isCommitType(type) ? type : '');
   const prediction = model.respond([
-    { role: "system", content: generatePrompt(locale, len, type) },
+    { role: "system", content: prompt },
     { role: "user", content: diff },
   ], {
     maxPredictedTokens: 100,
