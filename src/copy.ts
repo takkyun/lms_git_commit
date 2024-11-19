@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 
 export const copyToClipboard = (text: string) => {
-  const command = `echo "${text}" |  tr -d "\n"`;
+  const command = `echo "${text.replace(/\\/g, '\\\\').replace(/\`/g, '\\`').replace(/"/g, '\\"').replace(/\n/g, '\\n')}"`;
   if (process.platform === 'darwin') {
     exec(`${command} | pbcopy`);
   } else if (process.platform === 'win32') {
