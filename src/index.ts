@@ -20,8 +20,7 @@ const checkModels = async () => {
   return await client.llm.get({ identifier: defaultModelIdentifier });
 }
 
-const constructCommitMessage = async (model: LLMSpecificModel, diff: string, locale: string, len: number, type: CommitType) => {
-  const prompt = generatePrompt(locale, len, isCommitType(type) ? type : '');
+const constructCommitMessage = async (model: LLMSpecificModel, diff: string, prompt: string) => {
   const prediction = model.respond([
     { role: "system", content: prompt },
     { role: "user", content: diff },
@@ -59,7 +58,17 @@ const main = async () => {
   const len = parseInt(getArgParam('len') ?? '200');
   const type = getArgParam('type') ?? '';
   const clipboard = getArgParam('clipboard') === 'true';
-  const response = await constructCommitMessage(model, staged.diff, locale, len, isCommitType(type) ? type : '');
+  const dryrun = getArgParam('dryrun') === 'true';
+  const prompt = generatePrompt(locale, len, isCommitType(type) ? type : '');
+  if (dryrun) {
+    const input = `**System:**\n${prompt}\n\n**User:**\n${staged.diff}`;
+    console.log('Dry run:', input);
+    if (clipboard) {
+      copyToClipboard(input);
+    }
+    return;
+  }
+  const response = await constructCommitMessage(model, staged.diff, prompt);
   const message = [prefix, response].filter(p => !!p).join(' ');
   const confirmed = await confirm({ message: `Use this commit message?\n---\n${message}\n` });
   if (confirmed) {
