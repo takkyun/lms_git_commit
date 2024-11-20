@@ -25,7 +25,7 @@ const constructCommitMessage = async (model: LLMSpecificModel, diff: string, pro
     { role: "system", content: prompt },
     { role: "user", content: diff },
   ], {
-    maxPredictedTokens: 100,
+    maxPredictedTokens: 1024,
     temperature: 0.7,
   });
   let message = '';
