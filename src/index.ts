@@ -2,7 +2,7 @@ import { LLMSpecificModel, LMStudioClient } from "@lmstudio/sdk";
 import { confirm } from "@clack/prompts";
 import { exec } from "child_process";
 import { assertGitRepo, getStagedDiff } from "./git";
-import { CommitType, generatePrompt, isCommitType } from "./prompt";
+import { generatePrompt, isCommitType } from "./prompt";
 import { copyToClipboard } from "./copy";
 
 const client = new LMStudioClient();
