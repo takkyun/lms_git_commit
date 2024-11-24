@@ -7,7 +7,7 @@ export const copyToClipboard = (text: string) => {
   } else if (process.platform === 'win32') {
     exec(`${command} | clip`);
   } else if (process.platform === 'linux') {
-    exec(`${command} | xclip -selection clipboard`);
+    exec(`${command} | xclip -selection clipboard -l`);
   } else {
     console.error('Unsupported platform:', process.platform);
   }
