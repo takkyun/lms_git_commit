@@ -5,8 +5,8 @@ import { assertGitRepo, getStagedDiff } from "./git";
 import { generatePrompt, isCommitType } from "./prompt";
 import { copyToClipboard } from "./copy";
 
-const defaultModel = 'lightblue/suzume-llama-3-8B-japanese-gguf/ggml-model-Q4_K_M.gguf';
-const defaultModelIdentifier = 'suzume-llama-3-8b-japanese';
+const defaultModel = 'QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/Mistral-Nemo-Japanese-Instruct-2408.Q4_0.gguf';
+const defaultModelIdentifier = 'mistral-nemo-japanese-instruct-2408';
 
 const checkModels = async () => {
   const client = new LMStudioClient();
