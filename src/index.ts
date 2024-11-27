@@ -9,7 +9,7 @@ const defaultModel = 'lightblue/suzume-llama-3-8B-japanese-gguf/ggml-model-Q4_K_
 const defaultModelIdentifier = 'suzume-llama-3-8b-japanese';
 
 const checkModels = async () => {
-  const client =new LMStudioClient();
+  const client = new LMStudioClient();
   const loadedLLMs = await client.llm.listLoaded();
   if (loadedLLMs.length === 0) {
     await client.llm.load(defaultModel, {
