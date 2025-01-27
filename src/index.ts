@@ -30,7 +30,11 @@ const constructCommitMessage = async (model: LLMSpecificModel, diff: string, pro
     maxPredictedTokens: 1024,
     temperature: 0.7,
   });
-  return prediction.content;
+  const content = prediction.content;
+  if (content.match(/<think>[\s\S]*?<\/think>\n\n/m)) {
+    return content.replace(/<think>[\s\S]*?<\/think>\n\n/m, '');
+  }
+  return content;
 }
 
 const getArgParam = (key: string): string | undefined => {
