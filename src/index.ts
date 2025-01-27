@@ -7,6 +7,8 @@ import { copyToClipboard } from "./copy";
 
 const defaultModel = 'QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/Mistral-Nemo-Japanese-Instruct-2408.Q4_0.gguf';
 const defaultModelIdentifier = 'mistral-nemo-japanese-instruct-2408';
+// const defaultModel = 'lmstudio-community/DeepSeek-R1-Distill-Qwen-14B-GGUF/DeepSeek-R1-Distill-Qwen-14B-Q4_K_M.gguf';
+// const defaultModelIdentifier = 'deepseek-r1-distill-qwen-14b';
 
 const checkModels = async () => {
   const client = new LMStudioClient();
@@ -21,18 +23,14 @@ const checkModels = async () => {
 }
 
 const constructCommitMessage = async (model: LLMSpecificModel, diff: string, prompt: string) => {
-  const prediction = model.respond([
+  const prediction = await model.respond([
     { role: "system", content: prompt },
     { role: "user", content: diff },
   ], {
     maxPredictedTokens: 1024,
     temperature: 0.7,
   });
-  let message = '';
-  for await (const text of prediction) {
-    message += text;
-  }
-  return message;
+  return prediction.content;
 }
 
 const getArgParam = (key: string): string | undefined => {
@@ -52,7 +50,7 @@ const main = async () => {
   const len = parseInt(getArgParam('len') ?? '200');
   const type = getArgParam('type') ?? '';
   const clipboard = getArgParam('clipboard') === 'true';
-  const prompt = generatePrompt(locale, len, isCommitType(type) ? type : '');
+  const prompt = generatePrompt(locale, len, isCommitType(type) ? type : 'conventional');
   const dryrun = getArgParam('dryrun') === 'true';
   if (dryrun) {
     const input = `**System:**\n${prompt}\n\n**User:**\n${staged.diff}`;

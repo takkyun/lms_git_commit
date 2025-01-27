@@ -3,18 +3,18 @@
  * Copyright (c) Hassan El Mghari
  */
 
-const commitTypesArray = ['', 'conventional'] as const;
+const commitTypesArray = ['legacy', 'conventional'] as const;
 export type CommitType = (typeof commitTypesArray)[number];
 export const isCommitType = (type: string): type is CommitType => commitTypesArray.includes(type as CommitType);
 const commitTypeFormats: Record<CommitType, string> = {
-  '': '<commit message>',
+  'legacy': '<commit message>',
   conventional: '<type>(<optional scope>): <commit message>',
 };
 const specifyCommitFormat = (type: CommitType) =>
   `The output response must be in format:\n${commitTypeFormats[type]}`;
 
 const commitTypes: Record<CommitType, string> = {
-  '': '',
+  'legacy': '',
   /**
    * References:
    * Commitlint:
@@ -46,7 +46,7 @@ const commitTypes: Record<CommitType, string> = {
 export const generatePrompt = (
   locale = 'en',
   maxLength = 50,
-  type = '' as CommitType
+  type = 'legacy' as CommitType
 ) =>
   [
     'Generate a concise git commit message written in present tense for the following code diff with the given specifications below:',
