@@ -1,4 +1,4 @@
-import { LLMSpecificModel, LMStudioClient } from "@lmstudio/sdk";
+import { LMStudioClient } from "@lmstudio/sdk";
 import { confirm } from "@clack/prompts";
 import { exec } from "child_process";
 import { assertGitRepo, getStagedDiff } from "./git";
@@ -23,7 +23,7 @@ const checkModels = async () => {
   return await client.llm.model(defaultModelIdentifier);
 }
 
-const constructCommitMessage = async (model: LLMSpecificModel, diff: string, prompt: string) => {
+const constructCommitMessage = async (model: any, diff: string, prompt: string) => {
   const prediction = await model.respond([
     { role: "system", content: prompt },
     { role: "user", content: diff },
