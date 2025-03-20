@@ -19,7 +19,7 @@ const checkModels = async () => {
       noHup: true,
     } as any);
   }
-  return await client.llm.get({ identifier: defaultModelIdentifier });
+  return await client.llm.model(defaultModelIdentifier);
 }
 
 const constructCommitMessage = async (model: LLMSpecificModel, diff: string, prompt: string) => {
