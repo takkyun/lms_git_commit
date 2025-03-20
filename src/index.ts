@@ -11,7 +11,8 @@ const defaultModelIdentifier = 'mistral-nemo-japanese-instruct-2408';
 // const defaultModelIdentifier = 'deepseek-r1-distill-llama-8b';
 
 const checkModels = async () => {
-  const client = new LMStudioClient();
+  const baseUrl = getArgParam('baseUrl');
+  const client = new LMStudioClient({ baseUrl });
   const loadedLLMs = await client.llm.listLoaded();
   if (loadedLLMs.length === 0) {
     await client.llm.load(defaultModel, {
