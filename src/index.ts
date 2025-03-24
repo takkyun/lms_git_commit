@@ -5,10 +5,8 @@ import { assertGitRepo, getStagedDiff } from "./git";
 import { generatePrompt, isCommitType } from "./prompt";
 import { copyToClipboard } from "./copy";
 
-const defaultModel = 'QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/Mistral-Nemo-Japanese-Instruct-2408.Q4_0.gguf';
+const defaultModel = 'QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/Mistral-Nemo-Japanese-Instruct-2408.Q4_K_M.gguf';
 const defaultModelIdentifier = 'mistral-nemo-japanese-instruct-2408';
-// const defaultModel = 'lmstudio-community/DeepSeek-R1-Distill-Llama-8B-GGUF/DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf';
-// const defaultModelIdentifier = 'deepseek-r1-distill-llama-8b';
 
 const checkModels = async () => {
   const baseUrl = getArgParam('baseUrl');
@@ -20,7 +18,8 @@ const checkModels = async () => {
       noHup: true,
     } as any);
   }
-  return await client.llm.model(defaultModelIdentifier);
+  const model = loadedLLMs.find(llm => llm.identifier === defaultModelIdentifier);
+  return model ?? await client.llm.model();
 }
 
 const constructCommitMessage = async (model: any, diff: string, prompt: string) => {
