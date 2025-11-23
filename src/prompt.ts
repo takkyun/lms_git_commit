@@ -51,7 +51,7 @@ export const generatePrompt = (
   [
     'Generate a concise git commit message written in present tense for the following code diff with the given specifications below:',
     `Message language: ${locale}`,
-    `The message should consist of a summary and a detailed body. The summary must be a maximum of 50 characters. The detailed body can be empty. The total of summary and detailed body must be a maximum of ${maxLength} characters. Exclude anything unnecessary such as translation. Your entire response will be passed directly into git commit. No need to include any diff, please make sure the response the commit message only.`,
+    `The message should consist of a summary and a detailed body. The summary must be a maximum of 50 characters. The detailed body can be empty. The total of summary and detailed body must be a maximum of ${maxLength} characters. Exclude anything unnecessary such as translation. Your entire response will be passed directly into git commit. No need to include any diff, please make sure the response the commit message only. Please ignore import statements and concentrate on the main code/logic changes.`,
     commitTypes[type],
     specifyCommitFormat(type),
   ].filter(Boolean).join('\n');
