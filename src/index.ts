@@ -5,8 +5,12 @@ import { assertGitRepo, getStagedDiff } from "./git";
 import { generatePrompt, isCommitType } from "./prompt";
 import { copyToClipboard } from "./copy";
 
-const defaultModel = 'QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/Mistral-Nemo-Japanese-Instruct-2408.Q4_K_M.gguf';
-const defaultModelIdentifier = 'mistral-nemo-japanese-instruct-2408';
+// const defaultModel = 'QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/Mistral-Nemo-Japanese-Instruct-2408.Q4_K_M.gguf';
+// const defaultModelIdentifier = 'mistral-nemo-japanese-instruct-2408';
+// const defaultModel = 'lmstudio-community/gpt-oss-20b-GGUF/gpt-oss-20b-MXFP4.gguf';
+// const defaultModelIdentifier = 'openai/gpt-oss-20b';
+const defaultModel = 'lmstudio-community/gemma-3-12b-it-GGUF/gemma-3-12b-it-Q4_K_M.gguf';
+const defaultModelIdentifier = 'google/gemma-3-12b';
 
 const checkModels = async () => {
   const baseUrl = getArgParam('baseUrl');
