@@ -26,12 +26,101 @@ const checkModels = async () => {
   return model ?? await client.llm.model();
 }
 
-const constructCommitMessage = async (model: any, diff: string, prompt: string) => {
+/**
+ * Truncate diff to fit within token limits
+ * Keeps the summary and most recent changes, removes oldest changes if needed
+ */
+const truncateDiff = (diff: string, maxLength: number = 3000): string => {
+  if (diff.length <= maxLength) {
+    return diff;
+  }
+
+  // Split into diff headers (file names) and content
+  const lines = diff.split('\n');
+
+  let result = '';
+
+  // First pass: collect file separators
+  const fileSeparators: number[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith('diff --git')) {
+      fileSeparators.push(i);
+    }
+  }
+
+  // If single file, just truncate the content
+  if (fileSeparators.length <= 1) {
+    return diff.substring(0, maxLength) + '\n... (truncated)';
+  }
+
+  // Keep first file and recent files, remove oldest middle files
+  const lastFileIndex = fileSeparators.length - 1;
+  const linesToKeep = [];
+
+  // Always keep the first file
+  const firstFileEnd = fileSeparators[1] || lines.length;
+  linesToKeep.push(...lines.slice(fileSeparators[0], firstFileEnd));
+
+  // Keep last few files (usually most important)
+  const keepLastFiles = Math.min(3, fileSeparators.length - 1);
+  for (let i = Math.max(1, lastFileIndex - keepLastFiles + 1); i <= lastFileIndex; i++) {
+    const start = fileSeparators[i];
+    const end = i < fileSeparators.length - 1 ? fileSeparators[i + 1] : lines.length;
+    linesToKeep.push(...lines.slice(start, end));
+  }
+
+  result = linesToKeep.join('\n');
+
+  if (result.length > maxLength) {
+    result = result.substring(0, maxLength);
+  }
+
+  return result + '\n... (truncated due to size)';
+};
+
+/**
+ * Generate a simplified commit message when LLM fails due to context overflow
+ */
+const generateFallbackMessage = (diff: string, type: string): string => {
+  // Extract file changes
+  const files = diff.match(/^diff --git a\/.*? b\/.*?$/gm) || [];
+  const uniqueFiles = [...new Set(files.map(f => f.split(' ')[3]?.replace(/^b\//, '') || 'files'))];
+
+  // Detect change type from diff
+  let changeType = type === 'conventional' ? 'chore' : '';
+  let summary = '';
+
+  if (diff.includes('feat:') || /^\+.*feature/mi.test(diff)) {
+    changeType = 'feat';
+    summary = `add new feature (${uniqueFiles.length} files)`;
+  } else if (/^\+.*fix/mi.test(diff) || diff.includes('fix:')) {
+    changeType = 'fix';
+    summary = `fix bug (${uniqueFiles.length} files)`;
+  } else if (/^\+.*test/mi.test(diff)) {
+    changeType = 'test';
+    summary = `add tests (${uniqueFiles.length} files)`;
+  } else if (/^\+.*\/\/|^\+.*\/\*|docs/mi.test(diff)) {
+    changeType = 'docs';
+    summary = `update documentation (${uniqueFiles.length} files)`;
+  } else if (diff.split('\n').filter(l => l.startsWith('-')).length > diff.split('\n').filter(l => l.startsWith('+')).length) {
+    changeType = 'refactor';
+    summary = `refactor code (${uniqueFiles.length} files)`;
+  } else {
+    summary = `update code (${uniqueFiles.length} files)`;
+  }
+
+  if (type === 'conventional') {
+    return `${changeType}: ${summary}`;
+  }
+  return summary;
+};
+
+const generateMessage = async (model: any, prompt: string, diff: string, maxTokens: number = 1024) => {
   const prediction = await model.respond([
     { role: "system", content: prompt },
     { role: "user", content: diff },
   ], {
-    maxPredictedTokens: 1024,
+    maxPredictedTokens: maxTokens,
     temperature: 0.7,
   });
   const content = prediction.content;
@@ -42,6 +131,42 @@ const constructCommitMessage = async (model: any, diff: string, prompt: string) 
     return content.replace(/.*?<\|channel\|>final<\|message\|>/m, '').trim();
   }
   return content;
+};
+
+const constructCommitMessage = async (model: any, diff: string, prompt: string) => {
+  try {
+    // First attempt: try with full diff
+    try {
+      return await generateMessage(model, prompt, diff);
+    } catch (error: any) {
+      // Check if this is a context length error
+      if (error.message?.includes('context') || error.message?.includes('token')) {
+        console.warn('⚠️  Context length exceeded, attempting recovery...');
+
+        // Second attempt: try with truncated diff
+        const truncatedDiff = truncateDiff(diff);
+        try {
+          const result = await generateMessage(model, prompt, truncatedDiff);
+          console.warn('✓ Successfully recovered with truncated diff');
+          return result;
+        } catch (retryError: any) {
+          // Third attempt: generate simple fallback message
+          if (retryError.message?.includes('context') || retryError.message?.includes('token')) {
+            console.warn('⚠️  Still exceeds limits, generating fallback message...');
+            const commitType = prompt.includes('conventional') ? 'conventional' : 'legacy';
+            const fallback = generateFallbackMessage(diff, commitType);
+            console.warn(`✓ Using fallback message: ${fallback}`);
+            return fallback;
+          }
+          throw retryError;
+        }
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error('Fatal error in constructCommitMessage:', error.message);
+    throw error;
+  }
 }
 
 const getArgParam = (key: string): string | undefined => {
