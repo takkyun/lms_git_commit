@@ -16,14 +16,17 @@ const checkModels = async () => {
   const baseUrl = getArgParam('baseUrl');
   const client = new LMStudioClient({ baseUrl });
   const loadedLLMs = await client.llm.listLoaded();
-  if (loadedLLMs.length === 0) {
+  const alreadyLoaded = loadedLLMs.find(llm => llm.identifier === defaultModelIdentifier);
+  if (!alreadyLoaded) {
     await client.llm.load(defaultModel, {
       identifier: defaultModelIdentifier,
       noHup: true,
+      config: {
+        contextLength: 24576,
+      },
     } as any);
   }
-  const model = loadedLLMs.find(llm => llm.identifier === defaultModelIdentifier);
-  return model ?? await client.llm.model();
+  return alreadyLoaded ?? await client.llm.model(defaultModelIdentifier);
 }
 
 /**
