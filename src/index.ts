@@ -5,28 +5,37 @@ import { assertGitRepo, getStagedDiff } from "./git";
 import { generatePrompt, isCommitType } from "./prompt";
 import { copyToClipboard } from "./copy";
 
-// const defaultModel = 'QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF/Mistral-Nemo-Japanese-Instruct-2408.Q4_K_M.gguf';
-// const defaultModelIdentifier = 'mistral-nemo-japanese-instruct-2408';
-// const defaultModel = 'lmstudio-community/gpt-oss-20b-GGUF/gpt-oss-20b-MXFP4.gguf';
-// const defaultModelIdentifier = 'openai/gpt-oss-20b';
-const defaultModel = 'lmstudio-community/gemma-3-12b-it-GGUF/gemma-3-12b-it-Q4_K_M.gguf';
-const defaultModelIdentifier = 'google/gemma-3-12b';
+const preferredModelIdentifiers = [
+  'google/gemma-4-e4b',
+  'google/gemma-3-12b',
+  'openai/gpt-oss-20b',
+  'mistral-nemo-japanese-instruct-2408',
+];
 
 const checkModels = async () => {
   const baseUrl = getArgParam('baseUrl');
   const client = new LMStudioClient({ baseUrl });
+
   const loadedLLMs = await client.llm.listLoaded();
-  const alreadyLoaded = loadedLLMs.find(llm => llm.identifier === defaultModelIdentifier);
-  if (!alreadyLoaded) {
-    await client.llm.load(defaultModel, {
-      identifier: defaultModelIdentifier,
-      noHup: true,
-      config: {
-        contextLength: 24576,
-      },
-    } as any);
+  for (const id of preferredModelIdentifiers) {
+    const match = loadedLLMs.find(llm => llm.identifier === id);
+    if (match) return match;
   }
-  return alreadyLoaded ?? await client.llm.model(defaultModelIdentifier);
+
+  const downloadedLLMs = (await client.system.listDownloadedModels('llm'))
+    .filter(m => !/^[0-9a-f]{32}:/.test(m.path));
+  for (const id of preferredModelIdentifiers) {
+    const installed = downloadedLLMs.find(m => m.modelKey === id);
+    if (installed) {
+      console.log(`Loading ${id}...`);
+      return await client.llm.load(installed.modelKey, {
+        identifier: id,
+        config: { contextLength: 24576 },
+      } as any);
+    }
+  }
+
+  return undefined;
 }
 
 /**
@@ -126,14 +135,13 @@ const generateMessage = async (model: any, prompt: string, diff: string, maxToke
     maxPredictedTokens: maxTokens,
     temperature: 0.7,
   });
-  const content = prediction.content;
-  if (content.match(/<think>[\s\S]*?<\/think>\n\n/m)) {
-    return content.replace(/<think>[\s\S]*?<\/think>\n\n/m, '');
-  }
-  if (content.match(/.*?<\|channel\|>final<\|message\|>/m)) {
-    return content.replace(/.*?<\|channel\|>final<\|message\|>/m, '').trim();
-  }
-  return content;
+  let cleaned: string = prediction.content;
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>\n*/g, '');
+  const finalMatch = cleaned.match(/<\|channel\|>final<\|message\|>([\s\S]*?)(?:<\|end\|>|<\|return\|>|$)/);
+  if (finalMatch) return finalMatch[1].trim();
+  cleaned = cleaned.replace(/<\|channel\|>analysis<\|message\|>[\s\S]*?(?:<\|end\|>|$)/g, '');
+  cleaned = cleaned.replace(/<\|[^|]+\|>/g, '');
+  return cleaned.trim();
 };
 
 const constructCommitMessage = async (model: any, diff: string, prompt: string) => {
@@ -203,6 +211,7 @@ const main = async () => {
   if (!model) {
     console.error('Model not found.');
     process.exit(1);
+    return;
   }
   console.log('Model:', model.identifier);
   const response = await constructCommitMessage(model, staged.diff, prompt);
