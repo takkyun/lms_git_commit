@@ -226,5 +226,6 @@ const main = async () => {
   } else {
     console.error('cancelled.');
   }
+  process.exit(0);
 }
 main();
