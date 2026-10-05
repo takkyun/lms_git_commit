@@ -1,0 +1,8 @@
+# esbuild's postinstall must run on a fresh install; pnpm blocks dependency
+# build scripts unless they are approved here. pnpm 11+ gates on allowBuilds and
+# no longer reads the "pnpm" field in package.json; onlyBuiltDependencies keeps
+# older pnpm versions working.
+onlyBuiltDependencies:
+  - esbuild
+allowBuilds:
+  esbuild: true
