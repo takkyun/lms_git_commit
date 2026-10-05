@@ -13,7 +13,7 @@ This project is a command-line tool that generates automated Git commit messages
 
 ## Prerequisites
 
-- **Node.js** (version 16 or higher)
+- **Node.js** 24 (see `.nvmrc`)
 - **pnpm** (the version pinned in `package.json`'s `packageManager` field; run `corepack enable` to use it)
 - **Git** (installed and configured)
 - Access to an instance of LMStudio with the `QuantFactory/Mistral-Nemo-Japanese-Instruct-2408-GGUF` model loaded.

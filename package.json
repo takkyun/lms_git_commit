@@ -19,7 +19,7 @@
   },
   "gitHead": "96f419904258c472237e2a50496711c7552ed8af",
   "devDependencies": {
-    "@types/node": "^22.9.3",
+    "@types/node": "^24.19.0",
     "esbuild": "^0.25.1"
   },
   "packageManager": "pnpm@12.8.1"
